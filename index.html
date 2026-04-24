@@ -6,234 +6,80 @@
 <title>Registro de Horas Extras</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
-
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface2: #1c2330;
-    --border: #30363d;
-    --accent: #f0a500;
-    --accent2: #e05c00;
-    --text: #e6edf3;
-    --muted: #8b949e;
-    --danger: #f85149;
-    --success: #3fb950;
-    --blue: #58a6ff;
-    --radius: 10px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Sora', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 0 0 60px;
-  }
-
-  header {
-    background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 50%, #0d1117 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 28px 32px;
-    display: flex; align-items: center; gap: 18px;
-    position: relative; overflow: hidden;
-  }
-  header::before {
-    content: ''; position: absolute; top: -40px; left: -40px;
-    width: 220px; height: 220px;
-    background: radial-gradient(circle, rgba(240,165,0,0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .header-icon {
-    width: 52px; height: 52px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 14px; display: flex; align-items: center; justify-content: center;
-    font-size: 26px; flex-shrink: 0; box-shadow: 0 4px 20px rgba(240,165,0,0.3);
-  }
-  .header-text h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
-  .header-text p { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
-
-  .sync-bar {
-    background: var(--surface2); border-bottom: 1px solid var(--border);
-    padding: 8px 32px; display: flex; align-items: center; gap: 8px;
-    font-size: 0.78rem; color: var(--muted);
-  }
-  .sync-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--muted); transition: background .3s;
-  }
-  .sync-dot.ok { background: var(--success); }
-  .sync-dot.loading { background: var(--accent); animation: pulse 1s infinite; }
-  .sync-dot.error { background: var(--danger); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-  main { max-width: 900px; margin: 0 auto; padding: 32px 20px 0; }
-
-  .name-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 18px 22px; margin-bottom: 24px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .name-card label { font-size: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 6px; }
-  .name-card input {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 600;
-    padding: 9px 14px; width: 100%; outline: none; transition: border-color .2s;
-  }
-  .name-card input:focus { border-color: var(--accent); }
-  .name-icon { font-size: 28px; }
-
-  .form-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 24px; margin-bottom: 28px;
-  }
-  .form-card h2 {
-    font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
-    color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
-  }
-  .form-grid {
-    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px;
-  }
-  @media(max-width:700px) { .form-grid { grid-template-columns: 1fr 1fr; } }
-  @media(max-width:440px) { .form-grid { grid-template-columns: 1fr; } }
-
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
-  .form-group input, .form-group textarea {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); font-family: 'Sora', sans-serif; font-size: 0.9rem;
-    padding: 9px 12px; outline: none; transition: border-color .2s, box-shadow .2s; width: 100%;
-  }
-  .form-group input:focus, .form-group textarea:focus {
-    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(240,165,0,0.1);
-  }
-  .form-group textarea { resize: vertical; min-height: 64px; }
-  .activity-group { grid-column: 1 / -1; }
-
-  .total-display {
-    background: linear-gradient(135deg, rgba(240,165,0,0.1), rgba(224,92,0,0.08));
-    border: 1px solid rgba(240,165,0,0.3); border-radius: 8px; padding: 9px 14px;
-    font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600;
-    color: var(--accent); display: flex; align-items: center; gap: 8px; min-height: 40px;
-  }
-
-  .btn-add {
-    width: 100%; padding: 12px; border: none; border-radius: 8px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #000; font-family: 'Sora', sans-serif; font-size: 0.95rem; font-weight: 700;
-    cursor: pointer; transition: opacity .2s, transform .1s;
-    display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px;
-  }
-  .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn-add:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-
-  .table-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden; margin-bottom: 28px;
-  }
-  .table-header {
-    padding: 16px 22px; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-  .table-header h2 {
-    font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
-    color: var(--blue); display: flex; align-items: center; gap: 8px;
-  }
-  .badge {
-    background: rgba(88,166,255,0.15); color: var(--blue); border: 1px solid rgba(88,166,255,0.3);
-    border-radius: 20px; padding: 2px 10px; font-size: 0.75rem; font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-  }
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  thead tr { background: var(--surface2); }
-  th {
-    padding: 10px 14px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .1em; color: var(--muted); text-align: left;
-    border-bottom: 1px solid var(--border); white-space: nowrap;
-  }
-  td { padding: 11px 14px; font-size: 0.88rem; border-bottom: 1px solid rgba(48,54,61,0.6); vertical-align: middle; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: rgba(255,255,255,0.02); }
-  .td-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
-  .td-horas { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--accent); }
-  .btn-del {
-    background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.25);
-    border-radius: 6px; color: var(--danger); cursor: pointer;
-    padding: 4px 10px; font-size: 0.78rem; font-weight: 600; transition: background .2s;
-  }
-  .btn-del:hover { background: rgba(248,81,73,0.22); }
-
-  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 0.9rem; }
-  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: .5; }
-
-  .totals-bar {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 16px 22px; display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
-  }
-  .totals-label { font-size: 0.82rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
-  .totals-value { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--accent); letter-spacing: -1px; }
-
-  .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 28px; }
-  @media(max-width:500px) { .actions { grid-template-columns: 1fr; } }
-
-  .btn-action {
-    padding: 13px 18px; border: none; border-radius: 8px; font-family: 'Sora', sans-serif;
-    font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: opacity .2s, transform .1s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .btn-action:hover { opacity: 0.88; transform: translateY(-1px); }
-  .btn-word { background: linear-gradient(135deg, #2b6cb0, #1a4a8a); color: #fff; }
-  .btn-pdf  { background: linear-gradient(135deg, #c0392b, #8e1a1a); color: #fff; }
-  .btn-reset { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); color: var(--danger); }
-
-  .loading-overlay {
-    position: fixed; inset: 0; background: rgba(13,17,23,0.9);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 999; gap: 16px;
-  }
-  .spinner {
-    width: 40px; height: 40px; border: 3px solid var(--border);
-    border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-overlay p { color: var(--muted); font-size: 0.9rem; }
-
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .2s;
-  }
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 28px 30px; max-width: 380px; width: 90%;
-    transform: scale(.95); transition: transform .2s;
-  }
-  .modal-overlay.open .modal { transform: scale(1); }
-  .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
-  .modal p { font-size: 0.88rem; color: var(--muted); margin-bottom: 22px; }
-  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
-  .btn-cancel {
-    padding: 9px 18px; border-radius: 7px; border: 1px solid var(--border);
-    background: transparent; color: var(--text); font-family: 'Sora', sans-serif;
-    font-size: 0.88rem; font-weight: 600; cursor: pointer;
-  }
-  .btn-confirm-reset {
-    padding: 9px 18px; border-radius: 7px; border: none; background: var(--danger);
-    color: #fff; font-family: 'Sora', sans-serif; font-size: 0.88rem; font-weight: 700; cursor: pointer;
-  }
-
-  .toast {
-    position: fixed; bottom: 24px; right: 24px; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px;
-    font-size: 0.88rem; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    z-index: 2000; transform: translateY(20px); opacity: 0; transition: all .3s;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
+  :root{--bg:#0d1117;--surface:#161b22;--surface2:#1c2330;--border:#30363d;--accent:#f0a500;--accent2:#e05c00;--text:#e6edf3;--muted:#8b949e;--danger:#f85149;--success:#3fb950;--blue:#58a6ff;--radius:10px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 60px}
+  header{background:linear-gradient(135deg,#0d1117 0%,#1a1f2e 50%,#0d1117 100%);border-bottom:1px solid var(--border);padding:28px 32px;display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
+  header::before{content:'';position:absolute;top:-40px;left:-40px;width:220px;height:220px;background:radial-gradient(circle,rgba(240,165,0,.12) 0%,transparent 70%);pointer-events:none}
+  .header-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;box-shadow:0 4px 20px rgba(240,165,0,.3)}
+  .header-text h1{font-size:1.5rem;font-weight:800;letter-spacing:-.5px}
+  .header-text p{font-size:.82rem;color:var(--muted);margin-top:2px}
+  .sync-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 32px;display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted)}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:background .3s}
+  .sync-dot.ok{background:var(--success)}.sync-dot.loading{background:var(--accent);animation:pulse 1s infinite}.sync-dot.error{background:var(--danger)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  main{max-width:900px;margin:0 auto;padding:32px 20px 0}
+  .name-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+  .name-card label{font-size:.8rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:6px}
+  .name-card input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Sora',sans-serif;font-size:1rem;font-weight:600;padding:9px 14px;width:100%;outline:none;transition:border-color .2s}
+  .name-card input:focus{border-color:var(--accent)}
+  .form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:28px}
+  .form-card h2{font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:8px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+  @media(max-width:700px){.form-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:440px){.form-grid{grid-template-columns:1fr}}
+  .form-group{display:flex;flex-direction:column;gap:6px}
+  .form-group label{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+  .form-group input,.form-group textarea{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Sora',sans-serif;font-size:.9rem;padding:9px 12px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%}
+  .form-group input:focus,.form-group textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(240,165,0,.1)}
+  .form-group textarea{resize:vertical;min-height:64px}
+  .activity-group{grid-column:1/-1}
+  .total-display{background:linear-gradient(135deg,rgba(240,165,0,.1),rgba(224,92,0,.08));border:1px solid rgba(240,165,0,.3);border-radius:8px;padding:9px 14px;font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;color:var(--accent);display:flex;align-items:center;min-height:40px}
+  .btn-add{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:'Sora',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+  .btn-add:hover{opacity:.9;transform:translateY(-1px)}.btn-add:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:28px}
+  .table-header{padding:16px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+  .table-header h2{font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);display:flex;align-items:center;gap:8px}
+  .badge{background:rgba(88,166,255,.15);color:var(--blue);border:1px solid rgba(88,166,255,.3);border-radius:20px;padding:2px 10px;font-size:.75rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  thead tr{background:var(--surface2)}
+  th{padding:10px 14px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:11px 14px;font-size:.88rem;border-bottom:1px solid rgba(48,54,61,.6);vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:rgba(255,255,255,.02)}
+  .td-mono{font-family:'JetBrains Mono',monospace;font-size:.85rem}
+  .td-horas{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--accent)}
+  .btn-del{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.25);border-radius:6px;color:var(--danger);cursor:pointer;padding:4px 10px;font-size:.78rem;font-weight:600;transition:background .2s}
+  .btn-del:hover{background:rgba(248,81,73,.22)}
+  .empty-state{text-align:center;padding:48px 20px;color:var(--muted);font-size:.9rem}
+  .empty-state .empty-icon{font-size:40px;margin-bottom:12px;opacity:.5}
+  .totals-bar{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+  .totals-label{font-size:.82rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+  .totals-value{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--accent);letter-spacing:-1px}
+  .actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px}
+  @media(max-width:500px){.actions{grid-template-columns:1fr}}
+  .btn-action{padding:13px 18px;border:none;border-radius:8px;font-family:'Sora',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-action:hover{opacity:.88;transform:translateY(-1px)}
+  .btn-word{background:linear-gradient(135deg,#2b6cb0,#1a4a8a);color:#fff}
+  .btn-pdf{background:linear-gradient(135deg,#c0392b,#8e1a1a);color:#fff}
+  .btn-reset{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:var(--danger)}
+  .loading-overlay{position:fixed;inset:0;background:rgba(13,17,23,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px}
+  .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+  .spinner-sm{width:18px;height:18px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-overlay p{color:var(--muted);font-size:.9rem}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+  .modal-overlay.open{opacity:1;pointer-events:all}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 30px;max-width:380px;width:90%;transform:scale(.95);transition:transform .2s}
+  .modal-overlay.open .modal{transform:scale(1)}
+  .modal h3{font-size:1.1rem;font-weight:700;margin-bottom:10px}
+  .modal p{font-size:.88rem;color:var(--muted);margin-bottom:22px}
+  .modal-btns{display:flex;gap:10px;justify-content:flex-end}
+  .btn-cancel{padding:9px 18px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'Sora',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer}
+  .btn-confirm-reset{padding:9px 18px;border-radius:7px;border:none;background:var(--danger);color:#fff;font-family:'Sora',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:.88rem;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:2000;transform:translateY(20px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:8px}
+  .toast.show{transform:translateY(0);opacity:1}
 </style>
 </head>
 <body>
@@ -253,7 +99,7 @@
 
 <main>
   <div class="name-card">
-    <span class="name-icon">👤</span>
+    <span style="font-size:28px">👤</span>
     <div style="flex:1">
       <label>Nombre del Trabajador</label>
       <input type="text" id="nombre" placeholder="Ej: EMERSON ESPINOZA APARCO" />
@@ -298,13 +144,8 @@
       <table>
         <thead>
           <tr>
-            <th>#</th>
-            <th>Actividad / Trabajo Realizado</th>
-            <th>Fecha</th>
-            <th>Hora Inicio</th>
-            <th>Hora Final</th>
-            <th>Total</th>
-            <th></th>
+            <th>#</th><th>Actividad / Trabajo Realizado</th>
+            <th>Fecha</th><th>Hora Inicio</th><th>Hora Final</th><th>Total</th><th></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -312,7 +153,7 @@
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">📭</div>
         <div>No hay actividades registradas aún.</div>
-        <div style="margin-top:4px;font-size:.78rem;">Agrega una actividad para comenzar.</div>
+        <div style="margin-top:4px;font-size:.78rem">Agrega una actividad para comenzar.</div>
       </div>
     </div>
   </div>
@@ -331,7 +172,7 @@
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
-  <p id="loadingMsg">Cargando registros desde la nube...</p>
+  <p>Cargando registros desde la nube...</p>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -347,21 +188,32 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<!-- ✅ FIX 1: jsDelivr es más estable que cdnjs para docx -->
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+
 <script>
 // ===== SUPABASE =====
 const SUPA_URL = 'https://agjjhhazpgcqmbotjeln.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnampoaGF6cGdjcW1ib3RqZWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MDA1NDgsImV4cCI6MjA5MjQ3NjU0OH0.6PwMJrS_F9VzjktoTPM6xkRrkxhCZUB7ac_LwCb6ts0';
-const H = { 'Content-Type':'application/json', 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Prefer':'return=representation' };
-
-const api = {
-  get:    ()    => fetch(`${SUPA_URL}/rest/v1/registros?order=id.asc`, {headers:H}).then(r=>r.ok?r.json():Promise.reject(r)),
-  insert: (row) => fetch(`${SUPA_URL}/rest/v1/registros`, {method:'POST',headers:H,body:JSON.stringify(row)}).then(r=>r.ok?r.json():Promise.reject(r)),
-  delete: (id)  => fetch(`${SUPA_URL}/rest/v1/registros?id=eq.${id}`, {method:'DELETE',headers:H}).then(r=>r.ok?r:Promise.reject(r)),
-  deleteAll: () => fetch(`${SUPA_URL}/rest/v1/registros?id=gte.0`, {method:'DELETE',headers:H}).then(r=>r.ok?r:Promise.reject(r)),
+const H = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': `Bearer ${SUPA_KEY}`,
+  'Prefer': 'return=representation'
 };
 
-// ===== STATE =====
+const api = {
+  // ✅ FIX 5: ordenar por fecha ASC desde la base de datos
+  get: () => fetch(`${SUPA_URL}/rest/v1/registros?order=fecha.asc,id.asc`, { headers: H })
+              .then(r => r.ok ? r.json() : r.text().then(t => { throw new Error(t) })),
+  insert: (row) => fetch(`${SUPA_URL}/rest/v1/registros`, { method: 'POST', headers: H, body: JSON.stringify(row) })
+                    .then(r => r.ok ? r.json() : r.text().then(t => { throw new Error(t) })),
+  delete: (id) => fetch(`${SUPA_URL}/rest/v1/registros?id=eq.${id}`, { method: 'DELETE', headers: H })
+                   .then(r => r.ok ? r : r.text().then(t => { throw new Error(t) })),
+  deleteAll: () => fetch(`${SUPA_URL}/rest/v1/registros?id=gte.0`, { method: 'DELETE', headers: H })
+                    .then(r => r.ok ? r : r.text().then(t => { throw new Error(t) })),
+};
+
 let registros = [];
 
 function setSyncStatus(state, msg) {
@@ -372,38 +224,51 @@ function setSyncStatus(state, msg) {
 // ===== UTILS =====
 function calcDiff(ini, fin) {
   if (!ini || !fin) return null;
-  let [hI,mI] = ini.split(':').map(Number);
-  let [hF,mF] = fin.split(':').map(Number);
-  let mins = (hF*60+mF)-(hI*60+mI);
+  const [hI, mI] = ini.split(':').map(Number);
+  const [hF, mF] = fin.split(':').map(Number);
+  let mins = (hF * 60 + mF) - (hI * 60 + mI);
   if (mins <= 0) mins += 1440;
-  const h=Math.floor(mins/60), m=mins%60;
-  return { str:`${h}:${m.toString().padStart(2,'0')} HORAS`, mins };
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return { str: `${h}:${m.toString().padStart(2, '0')} HORAS`, mins };
 }
 
 function fmtHora(t) {
   if (!t) return '';
-  let [h,m] = t.split(':'); h=parseInt(h);
-  return `${h%12||12}:${m} ${h>=12?'pm':'am'}`;
+  const [hStr, m] = t.split(':');
+  const h = parseInt(hStr);
+  return `${h % 12 || 12}:${m} ${h >= 12 ? 'pm' : 'am'}`;
 }
 
 function fmtFecha(f) {
   if (!f) return '';
-  const [y,m,d] = f.split('-'); return `${d}/${m}/${y}`;
-}
-
-function getMesAnio(f) {
-  const M=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  const [y,m] = f.split('-'); return { mes:M[parseInt(m)-1], anio:y };
+  const [y, m, d] = f.split('-');
+  return `${d}/${m}/${y}`;
 }
 
 function minsFromStr(s) {
-  const x=s&&s.match(/(\d+):(\d+)/); return x?parseInt(x[1])*60+parseInt(x[2]):0;
+  const x = s && s.match(/(\d+):(\d+)/);
+  return x ? parseInt(x[1]) * 60 + parseInt(x[2]) : 0;
+}
+
+// ✅ FIX 2: Usa el último mes agregado (último registro por fecha)
+function getUltimoMesAnio(regs) {
+  const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO',
+                 'SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  if (!regs.length) return { mes: '', anio: '' };
+  // Ordenar por fecha y tomar el más reciente
+  const sorted = [...regs].sort((a, b) => b.fecha.localeCompare(a.fecha));
+  const [y, m] = sorted[0].fecha.split('-');
+  return { mes: MESES[parseInt(m) - 1], anio: y };
 }
 
 document.getElementById('horaInicio').addEventListener('input', actualizarTotal);
 document.getElementById('horaFin').addEventListener('input', actualizarTotal);
+
 function actualizarTotal() {
-  const d = calcDiff(document.getElementById('horaInicio').value, document.getElementById('horaFin').value);
+  const d = calcDiff(
+    document.getElementById('horaInicio').value,
+    document.getElementById('horaFin').value
+  );
   document.getElementById('totalDisplay').textContent = d ? d.str : '—';
 }
 
@@ -415,7 +280,8 @@ function render() {
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('emptyState');
   tbody.innerHTML = '';
-  document.getElementById('countBadge').textContent = registros.length + (registros.length===1?' registro':' registros');
+  document.getElementById('countBadge').textContent =
+    registros.length + (registros.length === 1 ? ' registro' : ' registros');
 
   if (!registros.length) {
     empty.style.display = 'block';
@@ -425,37 +291,38 @@ function render() {
   empty.style.display = 'none';
 
   let totalMins = 0;
-  registros.forEach((r,i) => {
+  // Los registros ya vienen ordenados por fecha ASC desde Supabase
+  registros.forEach((r, i) => {
     totalMins += minsFromStr(r.total);
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="td-mono" style="color:var(--muted)">${i+1}</td>
+      <td class="td-mono" style="color:var(--muted)">${i + 1}</td>
       <td style="max-width:300px">${r.actividad}</td>
       <td class="td-mono">${fmtFecha(r.fecha)}</td>
       <td class="td-mono">${fmtHora(r.hora_inicio)}</td>
       <td class="td-mono">${fmtHora(r.hora_fin)}</td>
       <td class="td-horas">${r.total}</td>
-      <td><button class="btn-del" onclick="eliminar(${r.id})">✕</button></td>
-    `;
+      <td><button class="btn-del" onclick="eliminar(${r.id})">✕</button></td>`;
     tbody.appendChild(tr);
   });
 
-  const h=Math.floor(totalMins/60), m=totalMins%60;
-  document.getElementById('totalGeneral').textContent = `${h}:${m.toString().padStart(2,'0')} HORAS`;
+  const h = Math.floor(totalMins / 60), m = totalMins % 60;
+  document.getElementById('totalGeneral').textContent =
+    `${h}:${m.toString().padStart(2, '0')} HORAS`;
 }
 
 // ===== CARGAR =====
 async function cargar() {
   try {
-    setSyncStatus('loading','Cargando registros...');
+    setSyncStatus('loading', 'Cargando registros...');
     registros = await api.get();
     const n = localStorage.getItem('horas_nombre');
     if (n) document.getElementById('nombre').value = n;
     render();
     setSyncStatus('ok', `Conectado · ${registros.length} registro(s)`);
-  } catch(e) {
-    setSyncStatus('error','Error de conexión');
-    toast('❌ No se pudo conectar con la base de datos','#f85149');
+  } catch (e) {
+    setSyncStatus('error', 'Error de conexión');
+    toast('❌ No se pudo conectar con la base de datos', '#f85149');
   } finally {
     document.getElementById('loadingOverlay').style.display = 'none';
   }
@@ -463,36 +330,40 @@ async function cargar() {
 
 // ===== AGREGAR =====
 async function agregarActividad() {
-  const fecha       = document.getElementById('fecha').value;
+  const fecha      = document.getElementById('fecha').value;
   const hora_inicio = document.getElementById('horaInicio').value;
-  const hora_fin    = document.getElementById('horaFin').value;
-  const actividad   = document.getElementById('actividad').value.trim();
-  const nombre      = document.getElementById('nombre').value.trim();
+  const hora_fin   = document.getElementById('horaFin').value;
+  const actividad  = document.getElementById('actividad').value.trim();
+  const nombre     = document.getElementById('nombre').value.trim();
 
-  if (!fecha||!hora_inicio||!hora_fin||!actividad) { toast('⚠️ Completa todos los campos','#f0a500'); return; }
+  if (!fecha || !hora_inicio || !hora_fin || !actividad) {
+    toast('⚠️ Completa todos los campos', '#f0a500'); return;
+  }
   const diff = calcDiff(hora_inicio, hora_fin);
-  if (!diff) { toast('⚠️ Horas inválidas','#f0a500'); return; }
+  if (!diff) { toast('⚠️ Horas inválidas', '#f0a500'); return; }
 
   const btn = document.getElementById('btnAgregar');
   btn.disabled = true;
-  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Guardando...';
-  setSyncStatus('loading','Guardando en la nube...');
+  btn.innerHTML = '<div class="spinner-sm"></div> Guardando...';
+  setSyncStatus('loading', 'Guardando en la nube...');
 
   try {
     const res = await api.insert({ nombre, fecha, hora_inicio, hora_fin, total: diff.str, actividad });
     registros.push(res[0]);
+    // ✅ Re-ordenar localmente por fecha ASC después de insertar
+    registros.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.id - b.id);
     localStorage.setItem('horas_nombre', nombre);
     render();
-    setSyncStatus('ok','Guardado · ' + new Date().toLocaleTimeString());
+    setSyncStatus('ok', 'Guardado · ' + new Date().toLocaleTimeString());
     document.getElementById('fecha').value = '';
     document.getElementById('horaInicio').value = '';
     document.getElementById('horaFin').value = '';
     document.getElementById('actividad').value = '';
     document.getElementById('totalDisplay').textContent = '—';
-    toast('✅ Actividad guardada en la nube','#3fb950');
-  } catch(e) {
-    setSyncStatus('error','Error al guardar');
-    toast('❌ Error al guardar','#f85149');
+    toast('✅ Actividad guardada en la nube', '#3fb950');
+  } catch (e) {
+    setSyncStatus('error', 'Error al guardar');
+    toast('❌ Error al guardar: ' + e.message, '#f85149');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<span>✚</span> Agregar Actividad';
@@ -501,148 +372,248 @@ async function agregarActividad() {
 
 // ===== ELIMINAR =====
 async function eliminar(id) {
-  setSyncStatus('loading','Eliminando...');
+  setSyncStatus('loading', 'Eliminando...');
   try {
     await api.delete(id);
-    registros = registros.filter(r=>r.id!==id);
+    registros = registros.filter(r => r.id !== id);
     render();
-    setSyncStatus('ok','Registro eliminado');
-    toast('🗑️ Registro eliminado','#8b949e');
-  } catch(e) {
-    setSyncStatus('error','Error al eliminar');
-    toast('❌ Error al eliminar','#f85149');
+    setSyncStatus('ok', 'Registro eliminado');
+    toast('🗑️ Registro eliminado', '#8b949e');
+  } catch (e) {
+    setSyncStatus('error', 'Error al eliminar');
+    toast('❌ Error al eliminar', '#f85149');
   }
 }
 
 // ===== RESET =====
 function mostrarReset() { document.getElementById('modalOverlay').classList.add('open'); }
 function cerrarModal()  { document.getElementById('modalOverlay').classList.remove('open'); }
+
 async function resetearTodo() {
   cerrarModal();
-  setSyncStatus('loading','Borrando todo...');
+  setSyncStatus('loading', 'Borrando todo...');
   try {
     await api.deleteAll();
     registros = [];
     render();
-    setSyncStatus('ok','Todos los registros eliminados');
-    toast('🗑️ Todo borrado','#f85149');
-  } catch(e) {
-    setSyncStatus('error','Error al borrar');
-    toast('❌ Error: '+e.message,'#f85149');
+    setSyncStatus('ok', 'Todos los registros eliminados');
+    toast('🗑️ Todo borrado', '#f85149');
+  } catch (e) {
+    setSyncStatus('error', 'Error al borrar');
+    toast('❌ Error: ' + e.message, '#f85149');
   }
 }
 
 // ===== TOAST =====
-function toast(msg, color='#3fb950') {
+function toast(msg, color = '#3fb950') {
   const el = document.getElementById('toast');
-  el.textContent = msg; el.style.borderColor = color+'55';
+  el.textContent = msg;
+  el.style.borderColor = color + '55';
   el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 2800);
+  setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// ===== WORD =====
+// ===== EXPORTAR WORD =====
 async function exportarWord() {
-  if (!registros.length) { toast('⚠️ No hay registros','#f0a500'); return; }
+  if (!registros.length) { toast('⚠️ No hay registros para exportar', '#f0a500'); return; }
+
+  // Verificar que la librería docx cargó correctamente
+  if (typeof docx === 'undefined') {
+    toast('❌ Librería Word no cargó. Recarga la página.', '#f85149'); return;
+  }
+
   const nombre = document.getElementById('nombre').value.trim() || registros[0].nombre || 'TRABAJADOR';
-  const { mes, anio } = getMesAnio(registros[0].fecha);
-  let totalMins=0; registros.forEach(r=>totalMins+=minsFromStr(r.total));
-  const h=Math.floor(totalMins/60),m=totalMins%60;
-  const totalStr=`${h}:${m.toString().padStart(2,'0')} HORAS`;
+
+  // ✅ FIX 2: Último mes agregado (más reciente por fecha)
+  const { mes, anio } = getUltimoMesAnio(registros);
+
+  let totalMins = 0;
+  registros.forEach(r => totalMins += minsFromStr(r.total));
+  const h = Math.floor(totalMins / 60), m = totalMins % 60;
+  const totalStr = `${h}:${m.toString().padStart(2, '0')} HORAS`;
 
   try {
-    const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
-           AlignmentType,BorderStyle,WidthType,ShadingType,VerticalAlign} = docx;
-    const cb = {style:BorderStyle.SINGLE,size:6,color:"000000"};
-    const borders = {top:cb,bottom:cb,left:cb,right:cb};
-    const COL=[3600,1400,2160,2200];
+    const {
+      Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+      AlignmentType, BorderStyle, WidthType, ShadingType, VerticalAlign
+    } = docx;
 
-    const hCell=(t,w)=>new TableCell({borders,width:{size:w,type:WidthType.DXA},
-      shading:{fill:"D6DCE4",type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:100,right:100},
-      verticalAlign:VerticalAlign.CENTER,
-      children:[new Paragraph({alignment:AlignmentType.CENTER,
-        children:[new TextRun({text:t,bold:true,size:18,font:"Arial"})]})]});
+    const cb = { style: BorderStyle.SINGLE, size: 6, color: '000000' };
+    const borders = { top: cb, bottom: cb, left: cb, right: cb };
+    const COL = [3600, 1400, 2160, 2200]; // suma = 9360 DXA
 
-    const dCell=(t,w,c=false)=>new TableCell({borders,width:{size:w,type:WidthType.DXA},
-      margins:{top:80,bottom:80,left:100,right:100},verticalAlign:VerticalAlign.CENTER,
-      children:[new Paragraph({alignment:c?AlignmentType.CENTER:AlignmentType.LEFT,
-        children:[new TextRun({text:t,size:18,font:"Arial"})]})]});
+    const hCell = (t, w) => new TableCell({
+      borders,
+      width: { size: w, type: WidthType.DXA },
+      shading: { fill: 'D6DCE4', type: ShadingType.CLEAR },
+      margins: { top: 80, bottom: 80, left: 100, right: 100 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: t, bold: true, size: 18, font: 'Arial' })]
+      })]
+    });
 
-    const doc = new Document({sections:[{
-      properties:{page:{size:{width:12240,height:15840},margin:{top:1080,right:1080,bottom:1080,left:1080}}},
-      children:[
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:120},children:[
-          new TextRun({text:"HORAS EXTRAS DEL MES DE ",bold:true,size:24,font:"Arial"}),
-          new TextRun({text:`${mes} ${anio}`,bold:true,size:24,font:"Arial",underline:{}}),
-        ]}),
-        new Paragraph({spacing:{after:200},children:[
-          new TextRun({text:"NOMBRES: ",bold:true,size:22,font:"Arial"}),
-          new TextRun({text:nombre,size:22,font:"Arial",italics:true}),
-        ]}),
-        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:COL,rows:[
-          new TableRow({tableHeader:true,children:[
-            hCell("TRABAJO REALIZADO",COL[0]),hCell("FECHA",COL[1]),
-            hCell("HORAS DE TRABAJO",COL[2]),hCell("CANTIDAD DE HORAS",COL[3])
-          ]}),
-          ...registros.map(r=>new TableRow({children:[
-            dCell(r.actividad,COL[0]),
-            dCell(fmtFecha(r.fecha),COL[1],true),
-            dCell(`${fmtHora(r.hora_inicio)} – ${fmtHora(r.hora_fin)}`,COL[2],true),
-            dCell(r.total,COL[3],true),
-          ]})),
-          new TableRow({children:[
-            new TableCell({borders,columnSpan:3,width:{size:COL[0]+COL[1]+COL[2],type:WidthType.DXA},
-              shading:{fill:"D6DCE4",type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:100,right:100},
-              children:[new Paragraph({alignment:AlignmentType.RIGHT,
-                children:[new TextRun({text:"TOTAL HORAS EXTRAS:",bold:true,size:18,font:"Arial"})]})]}),
-            dCell(totalStr,COL[3],true),
-          ]})
-        ]})
+    const dCell = (t, w, center = false) => new TableCell({
+      borders,
+      width: { size: w, type: WidthType.DXA },
+      margins: { top: 80, bottom: 80, left: 100, right: 100 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [new Paragraph({
+        alignment: center ? AlignmentType.CENTER : AlignmentType.LEFT,
+        children: [new TextRun({ text: String(t || ''), size: 18, font: 'Arial' })]
+      })]
+    });
+
+    // ✅ FIX 5: registros ya están ordenados por fecha ASC
+    const dataRows = registros.map(r => new TableRow({
+      children: [
+        dCell(r.actividad, COL[0]),
+        dCell(fmtFecha(r.fecha), COL[1], true),
+        dCell(`${fmtHora(r.hora_inicio)} - ${fmtHora(r.hora_fin)}`, COL[2], true),
+        dCell(r.total, COL[3], true),
       ]
-    }]});
+    }));
+
+    const totalRow = new TableRow({
+      children: [
+        new TableCell({
+          borders,
+          columnSpan: 3,
+          shading: { fill: 'D6DCE4', type: ShadingType.CLEAR },
+          width: { size: COL[0] + COL[1] + COL[2], type: WidthType.DXA },
+          margins: { top: 80, bottom: 80, left: 100, right: 100 },
+          children: [new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [new TextRun({ text: 'TOTAL HORAS EXTRAS:', bold: true, size: 18, font: 'Arial' })]
+          })]
+        }),
+        dCell(totalStr, COL[3], true),
+      ]
+    });
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            size: { width: 12240, height: 15840 },
+            margin: { top: 1080, right: 1080, bottom: 1080, left: 1080 }
+          }
+        },
+        children: [
+          // ✅ FIX 2+3: último mes, SIN underline
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 120 },
+            children: [
+              new TextRun({ text: `HORAS EXTRAS DEL MES DE ${mes} ${anio}`, bold: true, size: 24, font: 'Arial' })
+            ]
+          }),
+          // ✅ FIX 4: "NOMBRE:" (sin S)
+          new Paragraph({
+            spacing: { after: 200 },
+            children: [
+              new TextRun({ text: 'NOMBRE: ', bold: true, size: 22, font: 'Arial' }),
+              new TextRun({ text: nombre, size: 22, font: 'Arial', italics: true }),
+            ]
+          }),
+          new Table({
+            width: { size: 9360, type: WidthType.DXA },
+            columnWidths: COL,
+            rows: [
+              new TableRow({
+                tableHeader: true,
+                children: [
+                  hCell('TRABAJO REALIZADO', COL[0]),
+                  hCell('FECHA', COL[1]),
+                  hCell('HORAS DE TRABAJO', COL[2]),
+                  hCell('CANTIDAD DE HORAS', COL[3]),
+                ]
+              }),
+              ...dataRows,
+              totalRow,
+            ]
+          }),
+        ]
+      }]
+    });
 
     const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `HORAS_EXTRAS_${mes}_${anio}_${nombre.replace(/\s+/g,'_')}.docx`;
+    a.href = url;
+    a.download = `HORAS_EXTRAS_${mes}_${anio}_${nombre.replace(/\s+/g, '_')}.docx`;
     a.click();
-    toast('📄 Word generado','#58a6ff');
-  } catch(e) { console.error(e); toast('❌ Error al generar Word','#f85149'); }
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('📄 Word generado correctamente', '#58a6ff');
+  } catch (e) {
+    console.error('Error Word:', e);
+    toast('❌ Error al generar Word: ' + e.message, '#f85149');
+  }
 }
 
-// ===== PDF =====
+// ===== EXPORTAR PDF =====
 function exportarPDF() {
-  if (!registros.length) { toast('⚠️ No hay registros','#f0a500'); return; }
+  if (!registros.length) { toast('⚠️ No hay registros para exportar', '#f0a500'); return; }
   const nombre = document.getElementById('nombre').value.trim() || registros[0].nombre || 'TRABAJADOR';
-  const {mes,anio} = getMesAnio(registros[0].fecha);
-  let totalMins=0; registros.forEach(r=>totalMins+=minsFromStr(r.total));
-  const h=Math.floor(totalMins/60),m=totalMins%60;
-  const totalStr=`${h}:${m.toString().padStart(2,'0')} HORAS`;
 
-  const rows=registros.map(r=>`<tr>
-    <td>${r.actividad}</td><td>${fmtFecha(r.fecha)}</td>
-    <td>${fmtHora(r.hora_inicio)} – ${fmtHora(r.hora_fin)}</td><td>${r.total}</td>
-  </tr>`).join('');
+  // ✅ FIX 2: último mes
+  const { mes, anio } = getUltimoMesAnio(registros);
 
-  const w=window.open('','_blank');
+  let totalMins = 0;
+  registros.forEach(r => totalMins += minsFromStr(r.total));
+  const h = Math.floor(totalMins / 60), m = totalMins % 60;
+  const totalStr = `${h}:${m.toString().padStart(2, '0')} HORAS`;
+
+  // ✅ FIX 5: registros ya ordenados por fecha ASC
+  const rows = registros.map(r => `
+    <tr>
+      <td>${r.actividad}</td>
+      <td style="text-align:center">${fmtFecha(r.fecha)}</td>
+      <td style="text-align:center">${fmtHora(r.hora_inicio)} – ${fmtHora(r.hora_fin)}</td>
+      <td style="text-align:center">${r.total}</td>
+    </tr>`).join('');
+
+  const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>Horas Extras ${mes} ${anio}</title>
-  <style>body{font-family:Arial;font-size:11pt;margin:2cm}h1{text-align:center;font-size:14pt;margin-bottom:8px}
-  .sub{font-size:12pt;margin-bottom:14px}table{width:100%;border-collapse:collapse}
-  th{background:#D6DCE4;border:1px solid #000;padding:6px 8px;text-align:center;font-size:10pt}
-  td{border:1px solid #000;padding:5px 8px;font-size:10pt;vertical-align:top}
-  .tr td{background:#D6DCE4;font-weight:bold;text-align:right}.tr td:last-child{text-align:center}</style>
-  </head><body>
-  <h1>HORAS EXTRAS DEL MES DE <u>${mes} ${anio}</u></h1>
-  <div class="sub"><b>NOMBRES:</b> <i>${nombre}</i></div>
-  <table><thead><tr><th>TRABAJO REALIZADO</th><th>FECHA</th><th>HORAS DE TRABAJO</th><th>CANTIDAD DE HORAS</th></tr></thead>
-  <tbody>${rows}<tr class="tr"><td colspan="3">TOTAL HORAS EXTRAS:</td><td>${totalStr}</td></tr></tbody></table>
-  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11pt;margin:2cm}
+    h1{text-align:center;font-size:14pt;margin-bottom:8px}
+    .sub{font-size:12pt;margin-bottom:14px}
+    table{width:100%;border-collapse:collapse}
+    th{background:#D6DCE4;border:1px solid #000;padding:6px 8px;text-align:center;font-size:10pt}
+    td{border:1px solid #000;padding:5px 8px;font-size:10pt;vertical-align:top}
+    .tfooter td{background:#D6DCE4;font-weight:bold;text-align:right}
+    .tfooter td:last-child{text-align:center}
+  </style></head><body>
+  <!-- FIX 2+3: último mes, sin subrayado -->
+  <h1>HORAS EXTRAS DEL MES DE ${mes} ${anio}</h1>
+  <!-- FIX 4: NOMBRE sin S -->
+  <div class="sub"><b>NOMBRE:</b> <i>${nombre}</i></div>
+  <table>
+    <thead><tr>
+      <th>TRABAJO REALIZADO</th><th>FECHA</th>
+      <th>HORAS DE TRABAJO</th><th>CANTIDAD DE HORAS</th>
+    </tr></thead>
+    <tbody>
+      ${rows}
+      <tr class="tfooter">
+        <td colspan="3">TOTAL HORAS EXTRAS:</td>
+        <td>${totalStr}</td>
+      </tr>
+    </tbody>
+  </table>
+  <script>window.onload=()=>window.print()<\/script>
+  </body></html>`);
   w.document.close();
-  toast('🖨️ Abriendo impresión...','#58a6ff');
+  toast('🖨️ Abriendo vista de impresión...', '#58a6ff');
 }
 
 // ===== INIT =====
-document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target===document.getElementById('modalOverlay')) cerrarModal(); });
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) cerrarModal();
+});
 document.getElementById('fecha').valueAsDate = new Date();
 cargar();
 </script>
