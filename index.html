@@ -80,6 +80,15 @@
   .btn-confirm-reset{padding:9px 18px;border-radius:7px;border:none;background:var(--danger);color:#fff;font-family:'Sora',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer}
   .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:.88rem;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:2000;transform:translateY(20px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:8px}
   .toast.show{transform:translateY(0);opacity:1}
+  .login-overlay{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:1500;padding:20px}
+  .login-overlay.open{display:flex}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 30px;max-width:360px;width:100%;display:flex;flex-direction:column;gap:14px}
+  .login-card h3{font-size:1.1rem;font-weight:700}
+  .login-card p{font-size:.82rem;color:var(--muted)}
+  .login-error{color:var(--danger);font-size:.82rem;min-height:1em}
+  .btn-logout{margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:3px 10px;font-family:'Sora',sans-serif;font-size:.75rem;display:none}
+  .btn-logout:hover{color:var(--text)}
+  .pin-input{font-family:'JetBrains Mono',monospace !important;font-size:1.3rem !important;letter-spacing:.5em;text-align:center}
 </style>
 </head>
 <body>
@@ -95,6 +104,7 @@
 <div class="sync-bar">
   <div class="sync-dot loading" id="syncDot"></div>
   <span id="syncMsg">Conectando con la base de datos...</span>
+  <button class="btn-logout" id="btnLogout" onclick="cerrarSesion()">Cerrar sesión</button>
 </div>
 
 <main>
@@ -186,33 +196,159 @@
   </div>
 </div>
 
+<div class="login-overlay" id="loginOverlay">
+  <form class="login-card" id="loginForm">
+    <h3>🔒 Ingresar</h3>
+    <p>Ingresa tu PIN de 6 dígitos para ver tus horas extras.</p>
+    <div class="form-group">
+      <label>PIN (6 dígitos)</label>
+      <input type="password" id="loginPin" class="pin-input" autocomplete="current-password" inputmode="numeric" pattern="\d{6}" maxlength="6" title="6 dígitos" required />
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn-add" type="submit" id="btnLogin">Entrar</button>
+  </form>
+</div>
+
+<div class="login-overlay" id="pinOverlay">
+  <form class="login-card" id="pinForm">
+    <h3>🔑 Confirma con tu PIN</h3>
+    <p id="pinMsg">Ingresa tu PIN para borrar.</p>
+    <div class="form-group">
+      <label>PIN (6 dígitos)</label>
+      <input type="password" id="pinInput" class="pin-input" autocomplete="off" inputmode="numeric" pattern="\d{6}" maxlength="6" title="6 dígitos" required />
+    </div>
+    <div class="login-error" id="pinError"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" type="button" onclick="cerrarPin(false)">Cancelar</button>
+      <button class="btn-confirm-reset" type="submit" id="btnPin">Confirmar</button>
+    </div>
+  </form>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- ✅ FIX 1: jsDelivr es más estable que cdnjs para docx -->
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
 <script>
 // ===== SUPABASE =====
 const SUPA_URL = 'https://agjjhhazpgcqmbotjeln.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnampoaGF6cGdjcW1ib3RqZWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MDA1NDgsImV4cCI6MjA5MjQ3NjU0OH0.6PwMJrS_F9VzjktoTPM6xkRrkxhCZUB7ac_LwCb6ts0';
-const H = {
-  'Content-Type': 'application/json',
-  'apikey': SUPA_KEY,
-  'Authorization': `Bearer ${SUPA_KEY}`,
-  'Prefer': 'return=representation'
-};
+// La clave anon solo sirve para iniciar sesión: las tablas tienen RLS y
+// cada usuario solo ve y borra sus propios registros (token de la sesión).
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// Por ahora hay un solo usuario: una cuenta de Supabase Auth con este correo
+// interno (nunca se muestra) y el PIN de 6 dígitos como contraseña.
+const EMAIL_USUARIO = 'emerson@horasextras.local';
+
+async function headers() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { mostrarLogin(); throw new Error('Sesión expirada, vuelve a iniciar sesión'); }
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${session.access_token}`,
+    'Prefer': 'return=representation'
+  };
+}
 
 const api = {
   // ✅ FIX 5: ordenar por fecha ASC desde la base de datos
-  get: () => fetch(`${SUPA_URL}/rest/v1/registros?order=fecha.asc,id.asc`, { headers: H })
+  get: async () => fetch(`${SUPA_URL}/rest/v1/registros?order=fecha.asc,id.asc`, { headers: await headers() })
               .then(r => r.ok ? r.json() : r.text().then(t => { throw new Error(t) })),
-  insert: (row) => fetch(`${SUPA_URL}/rest/v1/registros`, { method: 'POST', headers: H, body: JSON.stringify(row) })
+  insert: async (row) => fetch(`${SUPA_URL}/rest/v1/registros`, { method: 'POST', headers: await headers(), body: JSON.stringify(row) })
                     .then(r => r.ok ? r.json() : r.text().then(t => { throw new Error(t) })),
-  delete: (id) => fetch(`${SUPA_URL}/rest/v1/registros?id=eq.${id}`, { method: 'DELETE', headers: H })
+  delete: async (id) => fetch(`${SUPA_URL}/rest/v1/registros?id=eq.${id}`, { method: 'DELETE', headers: await headers() })
                    .then(r => r.ok ? r : r.text().then(t => { throw new Error(t) })),
-  deleteAll: () => fetch(`${SUPA_URL}/rest/v1/registros?id=gte.0`, { method: 'DELETE', headers: H })
+  deleteAll: async () => fetch(`${SUPA_URL}/rest/v1/registros?id=gte.0`, { method: 'DELETE', headers: await headers() })
                     .then(r => r.ok ? r : r.text().then(t => { throw new Error(t) })),
 };
+
+// ===== SESIÓN =====
+function mostrarLogin() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+  document.getElementById('btnLogout').style.display = 'none';
+  document.getElementById('loginOverlay').classList.add('open');
+  setSyncStatus('error', 'Sin sesión');
+  document.getElementById('loginPin').focus();
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const btn = document.getElementById('btnLogin');
+  const err = document.getElementById('loginError');
+  err.textContent = '';
+  btn.disabled = true;
+  const { error } = await sb.auth.signInWithPassword({
+    email: EMAIL_USUARIO,
+    password: document.getElementById('loginPin').value
+  });
+  btn.disabled = false;
+  document.getElementById('loginPin').value = '';
+  if (error) {
+    err.textContent = error.status === 429
+      ? 'Demasiados intentos, espera unos minutos'
+      : 'PIN incorrecto';
+    return;
+  }
+  document.getElementById('loginOverlay').classList.remove('open');
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  iniciar();
+});
+
+// Pide el PIN otra vez antes de borrar; resuelve true solo si es correcto
+let resolverPin = null;
+function pedirPin(mensaje) {
+  document.getElementById('pinMsg').textContent = mensaje;
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinOverlay').classList.add('open');
+  document.getElementById('pinInput').focus();
+  return new Promise(res => { resolverPin = res; });
+}
+
+function cerrarPin(ok) {
+  document.getElementById('pinOverlay').classList.remove('open');
+  document.getElementById('pinInput').value = '';
+  if (resolverPin) { resolverPin(ok); resolverPin = null; }
+}
+
+document.getElementById('pinForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const btn = document.getElementById('btnPin');
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { cerrarPin(false); mostrarLogin(); return; }
+  btn.disabled = true;
+  const { error } = await sb.auth.signInWithPassword({
+    email: session.user.email,
+    password: document.getElementById('pinInput').value
+  });
+  btn.disabled = false;
+  if (error) {
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').textContent = error.status === 429
+      ? 'Demasiados intentos, espera unos minutos'
+      : 'PIN incorrecto';
+    return;
+  }
+  cerrarPin(true);
+});
+
+async function cerrarSesion() {
+  await sb.auth.signOut();
+  registros = [];
+  render();
+  mostrarLogin();
+}
+
+async function iniciar() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { mostrarLogin(); return; }
+  document.getElementById('btnLogout').style.display = 'block';
+  cargar();
+}
 
 let registros = [];
 
@@ -411,6 +547,7 @@ async function agregarActividad() {
 
 // ===== ELIMINAR =====
 async function eliminar(id) {
+  if (!await pedirPin('Ingresa tu PIN para borrar este registro.')) return;
   setSyncStatus('loading', 'Eliminando...');
   try {
     await api.delete(id);
@@ -430,6 +567,7 @@ function cerrarModal()  { document.getElementById('modalOverlay').classList.remo
 
 async function resetearTodo() {
   cerrarModal();
+  if (!await pedirPin('Ingresa tu PIN para borrar TODOS tus registros.')) return;
   setSyncStatus('loading', 'Borrando todo...');
   try {
     await api.deleteAll();
@@ -655,7 +793,7 @@ document.getElementById('modalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modalOverlay')) cerrarModal();
 });
 document.getElementById('fecha').valueAsDate = new Date();
-cargar();
+iniciar();
 </script>
 </body>
 </html>
