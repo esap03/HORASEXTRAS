@@ -250,6 +250,45 @@ function minsFromStr(s) {
   return x ? parseInt(x[1]) * 60 + parseInt(x[2]) : 0;
 }
 
+function fmtMins(mins) {
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return `${h}:${m.toString().padStart(2, '0')} HORAS`;
+}
+
+// Fechas acumuladas, una línea por mes: ['24, 25, 26/09/2026', '02, 05/10/2026']
+function fmtFechasAgrupadas(fechas) {
+  const porMes = new Map();
+  [...fechas].sort().forEach(f => {
+    const [y, m, d] = f.split('-');
+    const k = `${m}/${y}`;
+    if (!porMes.has(k)) porMes.set(k, []);
+    porMes.get(k).push(d);
+  });
+  return [...porMes].map(([k, dias]) => `${dias.join(', ')}/${k}`);
+}
+
+// Junta en una sola fila las tareas repetidas (mismo texto de actividad):
+// acumula fechas, horarios distintos y suma las horas. Respeta el orden por primera fecha.
+function agruparRegistros(regs) {
+  const grupos = new Map();
+  regs.forEach(r => {
+    const actividad = (r.actividad || '').trim().replace(/\s+/g, ' ');
+    const key = actividad.replace(/[.\s]+$/, '').toLowerCase();
+    if (!grupos.has(key)) grupos.set(key, { actividad, fechas: [], horarios: [], mins: 0 });
+    const g = grupos.get(key);
+    if (!g.fechas.includes(r.fecha)) g.fechas.push(r.fecha);
+    const horario = `${fmtHora(r.hora_inicio)} - ${fmtHora(r.hora_fin)}`;
+    if (!g.horarios.includes(horario)) g.horarios.push(horario);
+    g.mins += minsFromStr(r.total);
+  });
+  return [...grupos.values()].map(g => ({
+    actividad: g.actividad,
+    fechas: fmtFechasAgrupadas(g.fechas),
+    horarios: g.horarios,
+    total: fmtMins(g.mins),
+  }));
+}
+
 // ✅ FIX 2: Usa el último mes agregado (último registro por fecha)
 function getUltimoMesAnio(regs) {
   const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO',
@@ -454,24 +493,25 @@ async function exportarWord() {
       })]
     });
 
+    // t puede ser un texto o una lista de líneas
     const dCell = (t, w, center = false) => new TableCell({
       borders,
       width: { size: w, type: WidthType.DXA },
       margins: { top: 80, bottom: 80, left: 100, right: 100 },
       verticalAlign: VerticalAlign.CENTER,
-      children: [new Paragraph({
+      children: (Array.isArray(t) ? t : [t]).map(linea => new Paragraph({
         alignment: center ? AlignmentType.CENTER : AlignmentType.LEFT,
-        children: [new TextRun({ text: String(t || ''), size: 18, font: 'Arial' })]
-      })]
+        children: [new TextRun({ text: String(linea || ''), size: 18, font: 'Arial' })]
+      }))
     });
 
-    // ✅ FIX 5: registros ya están ordenados por fecha ASC
-    const dataRows = registros.map(r => new TableRow({
+    // Tareas repetidas en una sola fila (registros ya ordenados por fecha ASC)
+    const dataRows = agruparRegistros(registros).map(g => new TableRow({
       children: [
-        dCell(r.actividad, COL[0]),
-        dCell(fmtFecha(r.fecha), COL[1], true),
-        dCell(`${fmtHora(r.hora_inicio)} - ${fmtHora(r.hora_fin)}`, COL[2], true),
-        dCell(r.total, COL[3], true),
+        dCell(g.actividad, COL[0]),
+        dCell(g.fechas, COL[1], true),
+        dCell(g.horarios, COL[2], true),
+        dCell(g.total, COL[3], true),
       ]
     }));
 
@@ -565,13 +605,13 @@ function exportarPDF() {
   const h = Math.floor(totalMins / 60), m = totalMins % 60;
   const totalStr = `${h}:${m.toString().padStart(2, '0')} HORAS`;
 
-  // ✅ FIX 5: registros ya ordenados por fecha ASC
-  const rows = registros.map(r => `
+  // Tareas repetidas en una sola fila (registros ya ordenados por fecha ASC)
+  const rows = agruparRegistros(registros).map(g => `
     <tr>
-      <td>${r.actividad}</td>
-      <td style="text-align:center">${fmtFecha(r.fecha)}</td>
-      <td style="text-align:center">${fmtHora(r.hora_inicio)} – ${fmtHora(r.hora_fin)}</td>
-      <td style="text-align:center">${r.total}</td>
+      <td>${g.actividad}</td>
+      <td style="text-align:center">${g.fechas.join('<br>')}</td>
+      <td style="text-align:center">${g.horarios.join('<br>')}</td>
+      <td style="text-align:center">${g.total}</td>
     </tr>`).join('');
 
   const w = window.open('', '_blank');
